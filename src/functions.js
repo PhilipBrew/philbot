@@ -25,7 +25,7 @@ const handleCommand = (PhilBot, msg, serverQueue, command) => {
       msg.channel.send(`AHAHAHA ${msg.author.username} needs help... weak`);
       return;
     case "queue":
-      handleShowQueue(msg, serverQueue);
+      PhilBot.handleShowQueue(msg);
       return;
     case "skip":
       skip(msg, serverQueue, player, connection);

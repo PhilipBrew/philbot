@@ -132,15 +132,20 @@ class AudioBot {
     }
   }
 
-  handleShowQueue() {
-    const { msg, serverQueue } = this;
-
+  handleShowQueue(msg) {
     let queueString = `The current queue is:`;
-    queueString = queueString += serverQueue.songs.map(
-      ({ title, length }, i) => `
+    const songs = [...this.queue][0] ? [...this.queue][0][1].songs : false;
+
+    if (songs) {
+      queueString = queueString += songs.map(
+        ({ title, length }, i) => `
   ${i + 1}) ${title} - ${formatSecondsToTime(length)}`
-    );
-    msg.channel.send(queueString);
+      );
+      msg.channel.send(queueString);
+    } else {
+      queueString = `Haha what a twat, there's nowt in the queue ${msg.author.username}`;
+      msg.reply(queueString);
+    }
   }
 }
 
