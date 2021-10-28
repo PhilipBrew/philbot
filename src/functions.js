@@ -28,7 +28,7 @@ const handleCommand = (PhilBot, msg, serverQueue, command) => {
       PhilBot.handleShowQueue(msg);
       return;
     case "skip":
-      skip(msg, serverQueue, player, connection);
+      PhilBot.skip(msg);
       return;
     default:
       msg.reply(

@@ -17,6 +17,7 @@ class AudioBot {
     this.voiceChannel = voiceChannel;
     this.connection = connection;
     this.player = player;
+    this.songs = [];
   }
 
   handleJoinChannel(msg) {
@@ -63,8 +64,9 @@ class AudioBot {
       url: songInfo.videoDetails.video_url,
       length: songInfo.videoDetails.lengthSeconds,
     };
+    this.songs.push(song);
 
-    msg.reply(`You should now be hearing: ${song.title}`);
+    msg.reply(`${song.title} has been added to the queue`);
 
     if (!this.serverQueue) {
       const queueConstruct = {
@@ -93,23 +95,21 @@ class AudioBot {
     }
   }
 
-  skip() {
-    const { msg, serverQueue, player, connection } = this;
-
+  skip(msg) {
+    console.log("I GUESS WE'RE SKIPPING");
     if (!msg.member.voice.channel)
       return msg.reply(
-        "I'm not even in the channel man! What do you want me to even stop - you twat"
+        "I'm not even in the channel man! What do you want me to even stop? You twat"
       );
-    if (!serverQueue)
-      return msg.reply("There's not even a song playing man you div");
 
-    serverQueue.songs.shift();
+    // this.serverQueue.songs.shift();
+    this.songs.shift();
 
-    if (serverQueue.songs.length === 0)
+    if (this.songs.length === 0)
       return msg.reply(
-        "What do you want me to skip to like? There's nee song in the queue"
+        "What do you want me to skip to like? There's nee cunt in the queue"
       );
-    else play(serverQueue.songs[0]);
+    else this.play(this.songs[0]);
   }
 
   async connectToChannel(song) {
@@ -118,7 +118,7 @@ class AudioBot {
       guildId: this.voiceChannel.guild.id,
       adapterCreator: this.voiceChannel.guild.voiceAdapterCreator,
     });
-    if (song) {
+    if (song && this.songs.length === 1) {
       this.play(song);
     }
 
@@ -134,10 +134,8 @@ class AudioBot {
 
   handleShowQueue(msg) {
     let queueString = `The current queue is:`;
-    const songs = [...this.queue][0] ? [...this.queue][0][1].songs : false;
-
-    if (songs) {
-      queueString = queueString += songs.map(
+    if (this.songs.length > 0) {
+      queueString = queueString += this.songs.map(
         ({ title, length }, i) => `
   ${i + 1}) ${title} - ${formatSecondsToTime(length)}`
       );
