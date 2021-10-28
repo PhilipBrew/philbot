@@ -41,7 +41,7 @@ const handleCommand = (PhilBot, msg, command) => {
       return;
     default:
       msg.reply(
-        `Your command '${command}' is not a recognised command - ya dafty`
+        `Listen here you little shit, '${command}' is not a recognised command - ya dafty`
       );
       return;
   }
