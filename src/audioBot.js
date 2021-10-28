@@ -44,71 +44,104 @@ class AudioBot {
   }
 
   play(song) {
-    const resource = createAudioResource(
-      ytdl(song.url, { filter: "audioonly" })
-    );
-    this.player = createAudioPlayer();
-    this.connection.subscribe(this.player);
-    this.player.play(resource);
-    this.player.on(AudioPlayerStatus.Idle, () => {
-      // @TODO Play next song
-    });
+    if (!song) {
+      this.player.unpause();
+    } else {
+      const resource = createAudioResource(
+        ytdl(song.url, { filter: "audioonly" })
+      );
+      this.player = createAudioPlayer();
+      this.connection.subscribe(this.player);
+      this.player.play(resource);
+      this.player.on(AudioPlayerStatus.Idle, () => {
+        this.songs.shift();
+        if (this.songs.length !== 0) {
+          this.play(this.songs[0]);
+        }
+      });
+    }
+  }
+
+  pause() {
+    this.player.pause();
+  }
+
+  stop() {
+    this.player.stop();
+    this.songs = [];
+  }
+
+  resume() {
+    this.player.unpause();
   }
 
   async handleAddSong(msg) {
+    if (
+      msg.content.trim() === `${process.env.BOT_PREFIX} play` ||
+      msg.content.trim() === `${process.env.BOT_PREFIX}play`
+    ) {
+      if (this.player) this.player.unpause();
+      return;
+    }
     const urlToDecode = await getUrlFromCommand(msg.content);
-
-    const songInfo = await ytdl.getInfo(urlToDecode);
-    const song = {
-      title: songInfo.videoDetails.title,
-      url: songInfo.videoDetails.video_url,
-      length: songInfo.videoDetails.lengthSeconds,
-    };
-    this.songs.push(song);
-
-    msg.reply(`${song.title} has been added to the queue`);
-
-    if (!this.serverQueue) {
-      const queueConstruct = {
-        textChannel: msg.channel,
-        voiceChannel: this.voiceChannel,
-        connection: null,
-        songs: [],
-        volume: 5,
-        playing: true,
-      };
-
-      this.queue.set(msg.guild.id, queueConstruct);
-      queueConstruct.songs.push(song);
-
-      try {
-        await this.connectToChannel(song);
-      } catch (err) {
-        console.error("ERROR1 ------>", err);
-        this.queue.delete(msg.guild.id);
-        return msg.channel.send(err);
+    if (!urlToDecode.startsWith("https://www.youtube.com/watch?")) {
+      if (this.player) {
+        this.player.unpause();
+        msg.reply(
+          `That's not a proper link man... Honestly can't get the staff. Use the 'resume' command next time if that's what you want to do. Doylem`
+        );
       }
     } else {
-      this.serverQueue.songs.push(song);
-      this.play(song);
-      return msg.channel.send(`${song.title} has been added to the queue!`);
+      const songInfo = await ytdl.getInfo(urlToDecode);
+      const song = {
+        title: songInfo.videoDetails.title,
+        url: songInfo.videoDetails.video_url,
+        length: songInfo.videoDetails.lengthSeconds,
+      };
+      this.songs.push(song);
+
+      msg.reply(`${song.title} has been added to the queue`);
+
+      if (!this.serverQueue) {
+        const queueConstruct = {
+          textChannel: msg.channel,
+          voiceChannel: this.voiceChannel,
+          connection: null,
+          songs: [],
+          volume: 5,
+          playing: true,
+        };
+
+        this.queue.set(msg.guild.id, queueConstruct);
+        queueConstruct.songs.push(song);
+
+        try {
+          await this.connectToChannel(song);
+        } catch (err) {
+          console.error("ERROR1 ------>", err);
+          this.queue.delete(msg.guild.id);
+          return msg.channel.send(err);
+        }
+      } else {
+        this.serverQueue.songs.push(song);
+        this.play(song);
+        return msg.channel.send(`${song.title} has been added to the queue!`);
+      }
     }
   }
 
   skip(msg) {
-    console.log("I GUESS WE'RE SKIPPING");
     if (!msg.member.voice.channel)
       return msg.reply(
         "I'm not even in the channel man! What do you want me to even stop? You twat"
       );
-
-    // this.serverQueue.songs.shift();
-    this.songs.shift();
-
     if (this.songs.length === 0)
       return msg.reply(
         "What do you want me to skip to like? There's nee cunt in the queue"
       );
+    this.songs.shift();
+    if (this.songs.length === 0)
+      msg.channel.send(`That was the last song in the queue!`);
     else this.play(this.songs[0]);
   }
 

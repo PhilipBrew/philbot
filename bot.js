@@ -23,7 +23,7 @@ const PhilBot = new AudioBot(
   queue,
   "voiceChannel",
   "connection",
-  "player"
+  false
 );
 
 client.on("ready", () => {
@@ -32,11 +32,10 @@ client.on("ready", () => {
 
 client.on("message", (msg) => {
   const { content } = msg;
-  const serverQueue = queue.get(msg.guild.id);
 
   if (shouldReadMessage(content)) {
     const command = getSanitisedCommand(content);
-    handleCommand(PhilBot, msg, serverQueue, command);
+    handleCommand(PhilBot, msg, command);
   }
   return;
 });

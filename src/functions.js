@@ -15,7 +15,7 @@ const getSanitisedCommand = (msg) =>
     .split(" ")[0]
     .toLowerCase();
 
-const handleCommand = (PhilBot, msg, serverQueue, command) => {
+const handleCommand = (PhilBot, msg, command) => {
   switch (command) {
     case "play":
       PhilBot.handleJoinChannel(msg);
@@ -29,6 +29,15 @@ const handleCommand = (PhilBot, msg, serverQueue, command) => {
       return;
     case "skip":
       PhilBot.skip(msg);
+      return;
+    case "stop" || "clear":
+      PhilBot.stop();
+      return;
+    case "pause":
+      PhilBot.pause();
+      return;
+    case "resume":
+      PhilBot.resume();
       return;
     default:
       msg.reply(
